@@ -1,0 +1,7 @@
+streamlit>=1.25
+requests
+pandas
+websocket-client     # for WebSocket client mode
+redis                # for Redis Pub/Sub
+fastapi[all]         # optional, for simulator servers (uvicorn included)
+uvicorn
