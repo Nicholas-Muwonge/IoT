@@ -40,7 +40,7 @@ def start_mqtt(broker="localhost", port=1883):
         st.error(f"MQTT connection failed: {e}")
 
 st.set_page_config(page_title="IoT Real-Time Dashboard", layout="wide")
-st.title("📊 IoT Live Dashboard — Wi-Fi + MQTT + Streamlit")
+st.title("📊 Nicholas & Jarudi's IoT Live Dashboard")
 
 broker = st.text_input("MQTT Broker", "localhost")
 port = st.number_input("Port", value=1883)
