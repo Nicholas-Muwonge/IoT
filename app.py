@@ -18,7 +18,6 @@ try:
 except Exception:
     redis = None
 
-# ---------- Helpers ----------
 def init_state():
     if "ws_q" not in st.session_state:
         st.session_state.ws_q = queue.Queue()
@@ -31,11 +30,9 @@ init_state()
 
 def append_data(item):
     st.session_state.data.append(item)
-    # Keep last N
     if len(st.session_state.data) > 1000:
         st.session_state.data = st.session_state.data[-1000:]
 
-# ---------- WebSocket client thread ----------
 def start_ws_client(url):
     if websocket is None:
         st.warning("websocket-client library not installed; WebSocket mode unavailable.")
@@ -64,13 +61,11 @@ def start_ws_client(url):
                 ws.run_forever()
             except Exception as e:
                 st.session_state.ws_q.put({"error": f"WS client exception: {e}"})
-            # backoff before reconnect
             time.sleep(2)
 
     t = threading.Thread(target=run, daemon=True)
     t.start()
 
-# ---------- Redis PubSub listener ----------
 def start_redis_listener(url, channel):
     if redis is None:
         st.warning("redis library not installed; Redis Pub/Sub unavailable.")
@@ -136,10 +131,8 @@ with col2:
     st.header("Live feed")
     placeholder = st.empty()
 
-    # Polling loop (simplified): uses st.experimental_rerun or st_autorefresh
     if mode == "Polling (HTTP)" and 'start_poll' in locals() and start_poll:
         st.info(f"Polling {endpoint} every {interval}s — use Ctrl+C to stop if running locally.")
-        # We'll do a limited polling loop in the browser: manual button to poll once + autorefresh
         if st.button("Poll once now"):
             try:
                 r = requests.get(endpoint, timeout=5)
@@ -148,7 +141,6 @@ with col2:
                     payload = r.json()
                 except Exception:
                     payload = {"text": r.text}
-                # accept list or dict
                 if isinstance(payload, list):
                     for item in payload:
                         append_data(item)
@@ -159,15 +151,11 @@ with col2:
             except Exception as e:
                 st.error(f"Poll error: {e}")
 
-        # auto-refresh UI (client-side)
-        st_autorefresh = st.experimental_rerun  # alias to remind
-        # show last N rows
+        st_autorefresh = st.experimental_rerun  
         df = pd.DataFrame(st.session_state.data[-100:])
         placeholder.dataframe(df)
 
     else:
-        # For websocket & redis modes, pull from the queues into data
-        # Drain websocket queue
         drained = False
         try:
             while not st.session_state.ws_q.empty():
@@ -191,7 +179,6 @@ with col2:
     st.markdown("---")
     st.header("Simple charts & metrics")
     if len(st.session_state.data) > 0:
-        # If numeric field 'value' present, plot it
         try:
             df = pd.DataFrame(st.session_state.data)
             if "value" in df.columns:
