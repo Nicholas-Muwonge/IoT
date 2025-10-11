@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+streamlit = ">=1.25"
+requests = "*"
+pandas = "*"
+websocket-client = "*"
+redis = "*"
+fastapi = {extras = ["all"], version = "*"}
+uvicorn = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.13"
