@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
-import json, threading, queue
+import json
+import threading
+import queue
 import paho.mqtt.client as mqtt
 
 if "mqtt_q" not in st.session_state:
@@ -11,36 +13,27 @@ if "connected" not in st.session_state:
     st.session_state.connected = False
 
 def on_connect(client, userdata, flags, rc, properties=None):
-    """Callback when the client connects to the broker."""
-    st.session_state.connected = True
-    client.subscribe("sensors/#")
-    print("✅ Connected to MQTT Broker!", rc)
+    if rc == 0:
+        print("✅ Connected to MQTT Broker!")
+        st.session_state.connected = True
+        client.subscribe("sensors/#")
+    else:
+        print(f"❌ MQTT Connection failed with code {rc}")
 
 def on_message(client, userdata, msg):
-    """Callback for incoming MQTT messages."""
     try:
         payload = json.loads(msg.payload.decode("utf-8"))
-        st.session_state.mqtt_q.put(payload)
+        userdata.put(payload)
     except Exception as e:
-        print("⚠️ Parse error:", e)
+        print("Parse error:", e)
 
 def start_mqtt(broker="localhost", port=1883):
-    try:
-        client = mqtt.Client(
-            client_id="streamlit-dashboard",
-            protocol=mqtt.MQTTv311,
-            callback_api_version=1
-        )
-    except TypeError:
-        client = mqtt.Client(client_id="streamlit-dashboard", protocol=mqtt.MQTTv311)
-    except ValueError:
-        client = mqtt.Client(client_id="streamlit-dashboard", protocol=mqtt.MQTTv311)
-
+    client = mqtt.Client(client_id="streamlit-dashboard", protocol=mqtt.MQTTv311, userdata=st.session_state.mqtt_q)
     client.on_connect = on_connect
     client.on_message = on_message
 
     try:
-        client.connect(broker, int(port), 60)
+        client.connect(broker, port, 60)
         thread = threading.Thread(target=client.loop_forever, daemon=True)
         thread.start()
     except Exception as e:

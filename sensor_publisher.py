@@ -1,12 +1,7 @@
 import time, json, random
 from datetime import datetime
 import sys
-
-try:
-    import paho.mqtt.client as mqtt
-except Exception as e:
-    print("ERROR: paho-mqtt library not found. Install with: python3 -m pip install paho-mqtt", e)
-    sys.exit(1)
+import paho.mqtt.client as mqtt
 
 BROKER = "localhost"     
 PORT = 1883
@@ -14,7 +9,7 @@ TOPIC = "sensors/room1/temp"
 DEVICE_ID = "esp32-room1"
 
 try:
-    client = mqtt.Client(client_id=DEVICE_ID, protocol=mqtt.MQTTv311, callback_api_version=1)
+    client = mqtt.Client(client_id=DEVICE_ID, protocol=mqtt.MQTTv311)
 except TypeError:
     client = mqtt.Client(client_id=DEVICE_ID, protocol=mqtt.MQTTv311)
 except ValueError:
