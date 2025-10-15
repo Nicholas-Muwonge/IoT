@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Sensor Analytics</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --warning: #f39c12;
+            --danger: #e74c3c;
+            --info: #17a2b8;
+            --purple: #9b59b6;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            text-align: center;
+            border-left: 5px solid var(--secondary);
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            border-top: 4px solid var(--secondary);
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 8px 0;
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+        
+        .chart-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f1f2f6;
+        }
+        
+        .section-title {
+            font-size: 1.4em;
+            color: var(--primary);
+            font-weight: 600;
+        }
+        
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 350px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+        
+        .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .btn.active {
+            background: var(--secondary);
+            color: white;
+            border-color: var(--secondary);
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .correlation-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        
+        .positive { background: #d5f4e6; color: #27ae60; }
+        .negative { background: #fadbd8; color: #e74c3c; }
+        .neutral { background: #ebf5fb; color: #3498db; }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+        
+        @media (max-width: 1200px) {
+            .chart-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📊 Comprehensive Sensor Data Analytics</h1>
+            <p>Complete dataset visualization with multiple graph types</p>
+        </div>
+
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-label">Total Records</div>
+                <div class="stat-value" id="totalRecords">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Temperature Range</div>
+                <div class="stat-value" id="tempRange">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Humidity Range</div>
+                <div class="stat-value" id="humidityRange">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Motion Detections</div>
+                <div class="stat-value" id="motionDetections">--</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Battery Trend</div>
+                <div class="stat-value" id="batteryTrend">--</div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn active" onclick="showTab('time-series')">📈 Time Series</button>
+            <button class="btn" onclick="showTab('distributions')">📊 Distributions</button>
+            <button class="btn" onclick="showTab('correlations')">🔗 Correlations</button>
+            <button class="btn" onclick="showTab('motion-analysis')">🚶 Motion Analysis</button>
+            <button class="btn" onclick="showTab('battery-analysis')">🔋 Battery Analysis</button>
+            <button class="btn" onclick="loadAllData()">🔄 Refresh Data</button>
+        </div>
+
+        <!-- Time Series Tab -->
+        <div id="time-series" class="tab-content active">
+            <div class="chart-section">
+                <div class="section-header">
+                    <h2 class="section-title">Time Series Analysis</h2>
+                </div>
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <canvas id="timeSeriesChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="batteryTimeChart"></canvas>
+                    </div>
+                    <div class="chart-container full-width">
+                        <canvas id="motionTimelineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Distributions Tab -->
+        <div id="distributions" class="tab-content">
+            <div class="chart-section">
+                <div class="section-header">
+                    <h2 class="section-title">Data Distributions</h2>
+                </div>
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <canvas id="tempDistributionChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="humidityDistributionChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="batteryDistributionChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="combinedDistributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Correlations Tab -->
+        <div id="correlations" class="tab-content">
+            <div class="chart-section">
+                <div class="section-header">
+                    <h2 class="section-title">Sensor Correlations</h2>
+                </div>
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <canvas id="tempHumidityCorrelationChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="tempBatteryCorrelationChart"></canvas>
+                    </div>
+                    <div class="chart-container full-width">
+                        <canvas id="correlationMatrixChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Motion Analysis Tab -->
+        <div id="motion-analysis" class="tab-content">
+            <div class="chart-section">
+                <div class="section-header">
+                    <h2 class="section-title">Motion Detection Analysis</h2>
+                </div>
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <canvas id="motionPatternChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="motionConditionsChart"></canvas>
+                    </div>
+                    <div class="chart-container full-width">
+                        <canvas id="motionHeatmapChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Battery Analysis Tab -->
+        <div id="battery-analysis" class="tab-content">
+            <div class="chart-section">
+                <div class="section-header">
+                    <h2 class="section-title">Battery Performance Analysis</h2>
+                </div>
+                <div class="chart-grid">
+                    <div class="chart-container">
+                        <canvas id="batteryDrainChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="batteryUsageChart"></canvas>
+                    </div>
+                    <div class="chart-container full-width">
+                        <canvas id="batteryForecastChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart instances
+        let charts = {};
+        let allData = [];
+
+        // Initialize all charts
+        function initializeCharts() {
+            // Time Series Charts
+            charts.timeSeries = createChart('timeSeriesChart', {
+                type: 'line',
+                data: { datasets: [] },
+                options: createTimeSeriesOptions('Temperature & Humidity Over Time')
+            });
+
+            charts.batteryTime = createChart('batteryTimeChart', {
+                type: 'line',
+                data: { datasets: [] },
+                options: createTimeSeriesOptions('Battery Voltage Over Time')
+            });
+
+            charts.motionTimeline = createChart('motionTimelineChart', {
+                type: 'bar',
+                data: { datasets: [] },
+                options: createMotionTimelineOptions()
+            });
+
+            // Distribution Charts
+            charts.tempDistribution = createChart('tempDistributionChart', {
+                type: 'histogram',
+                data: { datasets: [] },
+                options: createDistributionOptions('Temperature Distribution', '°C')
+            });
+
+            charts.humidityDistribution = createChart('humidityDistributionChart', {
+                type: 'histogram',
+                data: { datasets: [] },
+                options: createDistributionOptions('Humidity Distribution', '%')
+            });
+
+            charts.batteryDistribution = createChart('batteryDistributionChart', {
+                type: 'histogram',
+                data: { datasets: [] },
+                options: createDistributionOptions('Battery Voltage Distribution', 'V')
+            });
+
+            // Correlation Charts
+            charts.tempHumidityCorrelation = createChart('tempHumidityCorrelationChart', {
+                type: 'scatter',
+                data: { datasets: [] },
+                options: createCorrelationOptions('Temperature vs Humidity')
+            });
+
+            charts.tempBatteryCorrelation = createChart('tempBatteryCorrelationChart', {
+                type: 'scatter',
+                data: { datasets: [] },
+                options: createCorrelationOptions('Temperature vs Battery')
+            });
+
+            // Initialize more charts as needed...
+        }
+
+        // Chart configuration functions
+        function createTimeSeriesOptions(title) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { title: { display: true, text: title } },
+                scales: {
+                    x: { type: 'linear', title: { display: true, text: 'Time Index' } },
+                    y: { beginAtZero: false }
+                }
+            };
+        }
+
+        function createDistributionOptions(title, unit) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { title: { display: true, text: title } },
+                scales: {
+                    x: { title: { display: true, text: unit } },
+                    y: { title: { display: true, text: 'Frequency' } }
+                }
+            };
+        }
+
+        function createCorrelationOptions(title) {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { title: { display: true, text: title } },
+                scales: {
+                    x: { title: { display: true, text: 'X Value' } },
+                    y: { title: { display: true, text: 'Y Value' } }
+                }
+            };
+        }
+
+        function createMotionTimelineOptions() {
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { title: { display: true, text: 'Motion Detection Timeline' } },
+                scales: {
+                    x: { title: { display: true, text: 'Time Index' } },
+                    y: { 
+                        title: { display: true, text: 'Motion Detected' },
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            };
+        }
+
+        // Load all data and update all visualizations
+        async function loadAllData() {
+            try {
+                showLoading();
+                
+                const response = await fetch('/api/all-data');
+                allData = await response.json();
+                
+                if (allData.length === 0) {
+                    throw new Error('No data received');
+                }
+
+                await updateStatistics();
+                updateAllCharts();
+                hideLoading();
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert('Error loading data: ' + error.message);
+            }
+        }
+
+        // Update statistics
+        async function updateStatistics() {
+            try {
+                const response = await fetch('/api/statistics');
+                const stats = await response.json();
+                
+                document.getElementById('totalRecords').textContent = stats.total_records.toLocaleString();
+                document.getElementById('tempRange').textContent = `${stats.temperature.min.toFixed(1)}°C - ${stats.temperature.max.toFixed(1)}°C`;
+                document.getElementById('humidityRange').textContent = `${stats.humidity.min.toFixed(1)}% - ${stats.humidity.max.toFixed(1)}%`;
+                document.getElementById('motionDetections').textContent = stats.motion.total_detections.toLocaleString();
+                
+                const batteryTrend = stats.battery_voltage.trend;
+                const trendSymbol = batteryTrend > 0 ? '↗' : (batteryTrend < 0 ? '↘' : '→');
+                document.getElementById('batteryTrend').textContent = `${trendSymbol} ${batteryTrend.toFixed(2)}V`;
+                
+            } catch (error) {
+                console.error('Error loading statistics:', error);
+            }
+        }
+
+        // Update all charts with complete data
+        function updateAllCharts() {
+            updateTimeSeriesCharts();
+            updateDistributionCharts();
+            updateCorrelationCharts();
+            // Add more chart update functions as needed
+        }
+
+        function updateTimeSeriesCharts() {
+            // Time Series Chart
+            charts.timeSeries.data.datasets = [
+                {
+                    label: 'Temperature (°C)',
+                    data: allData.map((d, i) => ({ x: i, y: d.temperature })),
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                },
+                {
+                    label: 'Humidity (%)',
+                    data: allData.map((d, i) => ({ x: i, y: d.humidity })),
+                    borderColor: '#3498db',
+                    backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }
+            ];
+            charts.timeSeries.update();
+
+            // Battery Time Chart
+            charts.batteryTime.data.datasets = [{
+                label: 'Battery Voltage (V)',
+                data: allData.map((d, i) => ({ x: i, y: d.battery_voltage })),
+                borderColor: '#27ae60',
+                backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                tension: 0.4,
+                fill: true
+            }];
+            charts.batteryTime.update();
+
+            // Motion Timeline Chart
+            charts.motionTimeline.data.datasets = [{
+                label: 'Motion Detected',
+                data: allData.map((d, i) => ({ x: i, y: d.motion })),
+                backgroundColor: allData.map(d => d.motion > 0 ? '#e67e22' : '#bdc3c7'),
+                borderColor: allData.map(d => d.motion > 0 ? '#d35400' : '#95a5a6')
+            }];
+            charts.motionTimeline.update();
+        }
+
+        function updateDistributionCharts() {
+            // Temperature Distribution
+            charts.tempDistribution.data.datasets = [{
+                label: 'Temperature',
+                data: allData.map(d => d.temperature),
+                backgroundColor: 'rgba(231, 76, 60, 0.6)',
+                borderColor: '#e74c3c'
+            }];
+            charts.tempDistribution.update();
+
+            // Humidity Distribution
+            charts.humidityDistribution.data.datasets = [{
+                label: 'Humidity',
+                data: allData.map(d => d.humidity),
+                backgroundColor: 'rgba(52, 152, 219, 0.6)',
+                borderColor: '#3498db'
+            }];
+            charts.humidityDistribution.update();
+
+            // Battery Distribution
+            charts.batteryDistribution.data.datasets = [{
+                label: 'Battery Voltage',
+                data: allData.map(d => d.battery_voltage),
+                backgroundColor: 'rgba(39, 174, 96, 0.6)',
+                borderColor: '#27ae60'
+            }];
+            charts.batteryDistribution.update();
+        }
+
+        function updateCorrelationCharts() {
+            // Temperature vs Humidity Correlation
+            charts.tempHumidityCorrelation.data.datasets = [{
+                label: 'Temperature vs Humidity',
+                data: allData.map(d => ({ x: d.temperature, y: d.humidity })),
+                backgroundColor: 'rgba(52, 152, 219, 0.6)',
+                borderColor: '#3498db'
+            }];
+            charts.tempHumidityCorrelation.update();
+
+            // Temperature vs Battery Correlation
+            charts.tempBatteryCorrelation.data.datasets = [{
+                label: 'Temperature vs Battery',
+                data: allData.map(d => ({ x: d.temperature, y: d.battery_voltage })),
+                backgroundColor: 'rgba(39, 174, 96, 0.6)',
+                borderColor: '#27ae60'
+            }];
+            charts.tempBatteryCorrelation.update();
+        }
+
+        // Tab navigation
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Remove active class from all buttons
+            document.querySelectorAll('.btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+            
+            // Activate corresponding button
+            event.target.classList.add('active');
+        }
+
+        // Utility functions
+        function createChart(canvasId, config) {
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            return new Chart(ctx, config);
+        }
+
+        function showLoading() {
+            document.body.style.opacity = '0.7';
+        }
+
+        function hideLoading() {
+            document.body.style.opacity = '1';
+        }
+
+        // Register Chart.js histogram controller
+        Chart.register({
+            id: 'histogram',
+            beforeUpdate: function(chart) {
+                const dataset = chart.data.datasets[0];
+                if (dataset && dataset.data) {
+                    const values = dataset.data;
+                    const min = Math.min(...values);
+                    const max = Math.max(...values);
+                    const binCount = Math.min(20, Math.sqrt(values.length));
+                    const binSize = (max - min) / binCount;
+                    
+                    const bins = Array(binCount).fill(0);
+                    values.forEach(value => {
+                        const binIndex = Math.min(binCount - 1, Math.floor((value - min) / binSize));
+                        bins[binIndex]++;
+                    });
+                    
+                    chart.data.labels = bins.map((_, i) => (min + (i * binSize)).toFixed(1));
+                    dataset.data = bins;
+                }
+            }
+        });
+
+        // Initialize application
+        initializeCharts();
+        loadAllData();
+    </script>
+</body>
+</html>
