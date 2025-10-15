@@ -221,7 +221,6 @@
             <button class="btn" onclick="loadAllData()">🔄 Refresh Data</button>
         </div>
 
-        <!-- Time Series Tab -->
         <div id="time-series" class="tab-content active">
             <div class="chart-section">
                 <div class="section-header">
@@ -241,7 +240,6 @@
             </div>
         </div>
 
-        <!-- Distributions Tab -->
         <div id="distributions" class="tab-content">
             <div class="chart-section">
                 <div class="section-header">
@@ -264,7 +262,6 @@
             </div>
         </div>
 
-        <!-- Correlations Tab -->
         <div id="correlations" class="tab-content">
             <div class="chart-section">
                 <div class="section-header">
@@ -284,7 +281,6 @@
             </div>
         </div>
 
-        <!-- Motion Analysis Tab -->
         <div id="motion-analysis" class="tab-content">
             <div class="chart-section">
                 <div class="section-header">
@@ -304,7 +300,6 @@
             </div>
         </div>
 
-        <!-- Battery Analysis Tab -->
         <div id="battery-analysis" class="tab-content">
             <div class="chart-section">
                 <div class="section-header">
@@ -326,13 +321,10 @@
     </div>
 
     <script>
-        // Chart instances
         let charts = {};
         let allData = [];
 
-        // Initialize all charts
         function initializeCharts() {
-            // Time Series Charts
             charts.timeSeries = createChart('timeSeriesChart', {
                 type: 'line',
                 data: { datasets: [] },
@@ -351,7 +343,6 @@
                 options: createMotionTimelineOptions()
             });
 
-            // Distribution Charts
             charts.tempDistribution = createChart('tempDistributionChart', {
                 type: 'histogram',
                 data: { datasets: [] },
@@ -370,7 +361,6 @@
                 options: createDistributionOptions('Battery Voltage Distribution', 'V')
             });
 
-            // Correlation Charts
             charts.tempHumidityCorrelation = createChart('tempHumidityCorrelationChart', {
                 type: 'scatter',
                 data: { datasets: [] },
@@ -383,10 +373,8 @@
                 options: createCorrelationOptions('Temperature vs Battery')
             });
 
-            // Initialize more charts as needed...
         }
 
-        // Chart configuration functions
         function createTimeSeriesOptions(title) {
             return {
                 responsive: true,
@@ -438,7 +426,7 @@
             };
         }
 
-        // Load all data and update all visualizations
+
         async function loadAllData() {
             try {
                 showLoading();
@@ -460,7 +448,6 @@
             }
         }
 
-        // Update statistics
         async function updateStatistics() {
             try {
                 const response = await fetch('/api/statistics');
@@ -480,16 +467,13 @@
             }
         }
 
-        // Update all charts with complete data
         function updateAllCharts() {
             updateTimeSeriesCharts();
             updateDistributionCharts();
             updateCorrelationCharts();
-            // Add more chart update functions as needed
         }
 
         function updateTimeSeriesCharts() {
-            // Time Series Chart
             charts.timeSeries.data.datasets = [
                 {
                     label: 'Temperature (°C)',
@@ -510,7 +494,6 @@
             ];
             charts.timeSeries.update();
 
-            // Battery Time Chart
             charts.batteryTime.data.datasets = [{
                 label: 'Battery Voltage (V)',
                 data: allData.map((d, i) => ({ x: i, y: d.battery_voltage })),
@@ -521,7 +504,6 @@
             }];
             charts.batteryTime.update();
 
-            // Motion Timeline Chart
             charts.motionTimeline.data.datasets = [{
                 label: 'Motion Detected',
                 data: allData.map((d, i) => ({ x: i, y: d.motion })),
@@ -532,7 +514,6 @@
         }
 
         function updateDistributionCharts() {
-            // Temperature Distribution
             charts.tempDistribution.data.datasets = [{
                 label: 'Temperature',
                 data: allData.map(d => d.temperature),
@@ -541,7 +522,6 @@
             }];
             charts.tempDistribution.update();
 
-            // Humidity Distribution
             charts.humidityDistribution.data.datasets = [{
                 label: 'Humidity',
                 data: allData.map(d => d.humidity),
@@ -550,7 +530,6 @@
             }];
             charts.humidityDistribution.update();
 
-            // Battery Distribution
             charts.batteryDistribution.data.datasets = [{
                 label: 'Battery Voltage',
                 data: allData.map(d => d.battery_voltage),
@@ -561,7 +540,6 @@
         }
 
         function updateCorrelationCharts() {
-            // Temperature vs Humidity Correlation
             charts.tempHumidityCorrelation.data.datasets = [{
                 label: 'Temperature vs Humidity',
                 data: allData.map(d => ({ x: d.temperature, y: d.humidity })),
@@ -570,7 +548,6 @@
             }];
             charts.tempHumidityCorrelation.update();
 
-            // Temperature vs Battery Correlation
             charts.tempBatteryCorrelation.data.datasets = [{
                 label: 'Temperature vs Battery',
                 data: allData.map(d => ({ x: d.temperature, y: d.battery_voltage })),
@@ -580,26 +557,20 @@
             charts.tempBatteryCorrelation.update();
         }
 
-        // Tab navigation
         function showTab(tabName) {
-            // Hide all tabs
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.remove('active');
             });
             
-            // Remove active class from all buttons
             document.querySelectorAll('.btn').forEach(btn => {
                 btn.classList.remove('active');
             });
             
-            // Show selected tab
             document.getElementById(tabName).classList.add('active');
             
-            // Activate corresponding button
             event.target.classList.add('active');
         }
 
-        // Utility functions
         function createChart(canvasId, config) {
             const ctx = document.getElementById(canvasId).getContext('2d');
             return new Chart(ctx, config);
@@ -613,7 +584,6 @@
             document.body.style.opacity = '1';
         }
 
-        // Register Chart.js histogram controller
         Chart.register({
             id: 'histogram',
             beforeUpdate: function(chart) {
@@ -637,7 +607,6 @@
             }
         });
 
-        // Initialize application
         initializeCharts();
         loadAllData();
     </script>

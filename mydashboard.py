@@ -8,7 +8,6 @@ import time
 from datetime import datetime
 import scipy.stats as stats
 
-# Page configuration
 st.set_page_config(
     page_title="Real-time Sensor Analytics",
     page_icon="📊",
@@ -16,7 +15,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for real-time features
 st.markdown("""
 <style>
     .realtime-header {
@@ -52,7 +50,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# API base URL
 API_BASE = "http://localhost:3000/api"
 
 class RealTimeDashboard:
@@ -91,7 +88,6 @@ class RealTimeDashboard:
             data['timestamp'] = datetime.now()
             self.realtime_data.append(data)
             
-            # Keep only recent data
             if len(self.realtime_data) > self.max_realtime_points:
                 self.realtime_data.pop(0)
             
@@ -114,7 +110,6 @@ class RealTimeDashboard:
             st.info("📡 Waiting for real-time data...")
             return
         
-        # Current values in columns
         col1, col2, col3, col4 = st.columns(4)
         
         with col1:
@@ -165,14 +160,12 @@ class RealTimeDashboard:
             st.info("📡 Collecting real-time data...")
             return
         
-        # Convert to DataFrame for easier manipulation
         realtime_df = pd.DataFrame(self.realtime_data)
         realtime_df['time_index'] = range(len(realtime_df))
         
         col1, col2 = st.columns(2)
         
         with col1:
-            # Real-time Temperature & Humidity
             fig_temp_hum = go.Figure()
             fig_temp_hum.add_trace(go.Scatter(
                 x=realtime_df['time_index'],
@@ -197,7 +190,6 @@ class RealTimeDashboard:
             st.plotly_chart(fig_temp_hum, use_container_width=True)
         
         with col2:
-            # Real-time Battery & Motion
             fig_battery_motion = go.Figure()
             fig_battery_motion.add_trace(go.Scatter(
                 x=realtime_df['time_index'],
@@ -222,7 +214,6 @@ class RealTimeDashboard:
             )
             st.plotly_chart(fig_battery_motion, use_container_width=True)
         
-        # Real-time combined chart
         fig_combined = go.Figure()
         fig_combined.add_trace(go.Scatter(
             x=realtime_df['time_index'],
@@ -278,7 +269,6 @@ class RealTimeDashboard:
         col1, col2 = st.columns(2)
         
         with col1:
-            # Temperature over time
             fig_temp = go.Figure()
             fig_temp.add_trace(go.Scatter(
                 x=list(range(len(self.df))),
@@ -295,7 +285,6 @@ class RealTimeDashboard:
             st.plotly_chart(fig_temp, use_container_width=True)
         
         with col2:
-            # Humidity over time
             fig_hum = go.Figure()
             fig_hum.add_trace(go.Scatter(
                 x=list(range(len(self.df))),
@@ -311,7 +300,6 @@ class RealTimeDashboard:
             )
             st.plotly_chart(fig_hum, use_container_width=True)
         
-        # Battery and Motion over time
         col3, col4 = st.columns(2)
         
         with col3:
@@ -356,7 +344,6 @@ class RealTimeDashboard:
         col1, col2, col3 = st.columns(3)
         
         with col1:
-            # Temperature distribution
             fig_temp_dist = go.Figure()
             fig_temp_dist.add_trace(go.Histogram(
                 x=self.df['temperature'],
@@ -373,7 +360,6 @@ class RealTimeDashboard:
             st.plotly_chart(fig_temp_dist, use_container_width=True)
         
         with col2:
-            # Humidity distribution
             fig_hum_dist = go.Figure()
             fig_hum_dist.add_trace(go.Histogram(
                 x=self.df['humidity'],
@@ -390,7 +376,6 @@ class RealTimeDashboard:
             st.plotly_chart(fig_hum_dist, use_container_width=True)
         
         with col3:
-            # Battery distribution
             fig_batt_dist = go.Figure()
             fig_batt_dist.add_trace(go.Histogram(
                 x=self.df['battery_voltage'],
@@ -406,7 +391,6 @@ class RealTimeDashboard:
             )
             st.plotly_chart(fig_batt_dist, use_container_width=True)
         
-        # Box plots for all sensors
         st.subheader("Statistical Summary")
         fig_box = go.Figure()
         fig_box.add_trace(go.Box(y=self.df['temperature'], name='Temperature', marker_color='#e74c3c'))
@@ -427,7 +411,6 @@ class RealTimeDashboard:
         col1, col2 = st.columns(2)
         
         with col1:
-            # Temperature vs Humidity scatter plot
             fig_corr1 = px.scatter(
                 self.df, 
                 x='temperature', 
@@ -448,7 +431,6 @@ class RealTimeDashboard:
             st.plotly_chart(fig_corr1, use_container_width=True)
         
         with col2:
-            # Temperature vs Battery scatter plot
             fig_corr2 = px.scatter(
                 self.df, 
                 x='temperature', 
@@ -456,7 +438,6 @@ class RealTimeDashboard:
                 title='Temperature vs Battery Voltage',
                 color_discrete_sequence=['#27ae60']
             )
-            # Add manual trend line
             if len(self.df) > 1:
                 z = np.polyfit(self.df['temperature'], self.df['battery_voltage'], 1)
                 p = np.poly1d(z)
@@ -468,7 +449,6 @@ class RealTimeDashboard:
                 ))
             st.plotly_chart(fig_corr2, use_container_width=True)
         
-        # Correlation matrix
         st.subheader("Correlation Matrix")
         numeric_df = self.df[['temperature', 'humidity', 'battery_voltage']]
         correlation_matrix = numeric_df.corr()
@@ -489,7 +469,6 @@ class RealTimeDashboard:
         )
         st.plotly_chart(fig_corr_matrix, use_container_width=True)
         
-        # Display correlation values
         st.write("**Correlation Coefficients:**")
         st.dataframe(correlation_matrix.round(3), use_container_width=True)
     
@@ -515,24 +494,20 @@ class RealTimeDashboard:
                 st.metric("Detection Rate", f"{detection_rate:.1f}%")
                 
             with col4:
-                # Calculate correlation manually
                 if len(self.df) > 1:
                     corr = np.corrcoef(self.df['temperature'], self.df['humidity'])[0,1]
                     st.metric("Temp-Humidity Correlation", f"{corr:.3f}")
             
-            # Show raw data preview
             with st.expander("View Raw Data"):
                 st.dataframe(self.df, use_container_width=True)
 
 def main():
-    # Initialize dashboard
     if 'dashboard' not in st.session_state:
         st.session_state.dashboard = RealTimeDashboard()
         st.session_state.last_update = datetime.now()
     
     dashboard = st.session_state.dashboard
     
-    # Sidebar controls
     st.sidebar.title("🎮 Dashboard Controls")
     auto_refresh = st.sidebar.checkbox("Auto Refresh", value=True)
     refresh_interval = st.sidebar.slider("Refresh Interval (seconds)", 1, 10, 2)
@@ -548,13 +523,11 @@ def main():
         dashboard.show_data_summary()
         st.rerun()
     
-    # Real-time data update
     if auto_refresh:
         current_data = dashboard.get_current_data()
         if current_data:
             dashboard.update_realtime_data(current_data)
     
-    # Display dashboard sections
     dashboard.create_realtime_header()
     dashboard.create_realtime_metrics()
     dashboard.create_realtime_charts()
@@ -562,7 +535,6 @@ def main():
     st.markdown("---")
     dashboard.create_historical_analysis()
     
-    # Auto-refresh logic
     if auto_refresh:
         time.sleep(refresh_interval)
         st.rerun()
